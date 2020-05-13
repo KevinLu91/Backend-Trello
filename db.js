@@ -1,5 +1,6 @@
 const mongo = require('mongodb');
 const MongoClient = mongo.MongoClient;
+const ObjectId = mongo.ObjectId;
 
 const url = 'mongodb://localhost:27017';
 
@@ -17,4 +18,7 @@ module.exports = {
     let db = client.db(dbName);
     return db;
   },
+  createObjectId(id) {
+    return new ObjectId(id);
+  }
 };
