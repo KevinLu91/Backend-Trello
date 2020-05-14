@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 
@@ -42,6 +42,7 @@ const Container = styled.div`
 
 function ModalItem(props){
   const [editValue, setEditValue] = useState('');
+  const [descriptionValue, setDescriptionValue] = useState('');
 
   function handleModual(){
     props.handleItemModul()
@@ -61,7 +62,18 @@ function ModalItem(props){
   }
 
   function handleEditItem(e){
-    axios.patch(`/trello/item/${e.target.dataset.id}`, {id: e.target.id, value: editValue})
+    axios.patch(`/trello/item/${e.target.dataset.id}/edit`, {id: e.target.id, value: editValue})
+      .then((result) =>{
+        console.log(result)
+        props.update()
+      })
+      .catch((e) =>{
+        console.log(e)
+      })
+  }
+
+  function handleDescription(e){
+    axios.patch(`/trello/item/${e.target.dataset.id}/description`, {id: e.target.id, value: descriptionValue})
       .then((result) =>{
         console.log(result)
         props.update()
@@ -73,15 +85,22 @@ function ModalItem(props){
 
   function handleEditOnChange(e){
     setEditValue(e.target.value)
-
   }
+
+  function handleDescriptionOnChange(e){
+    setDescriptionValue(e.target.value)
+  }
+
+
 
   return(
     <Container>
       <div className='modal_container'>
         <h3>Item Name:</h3>{editValue ? <p>{editValue}</p> : <p>{props.itemName}</p>}
+        <textarea rows="4" cols="50" onChange={handleDescriptionOnChange} value={descriptionValue}></textarea>
+        <button data-id={props.listId} id={props.itemId} onClick={handleDescription}>Save</button>
         <button data-id={props.listId} id={props.itemId} onClick={handleDeleteItem}>Delete</button>
-        <input onChange={handleEditOnChange} placeholder='Change item name..'/> 
+        <input type='text'onChange={handleEditOnChange} placeholder='Change item name..'/> 
         <button data-id={props.listId} id={props.itemId} onClick={handleEditItem}>Edit</button>
         <span className="close" onClick={handleModual}>&times;</span>
       </div>

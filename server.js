@@ -4,38 +4,15 @@ const port = process.env.process || 8090;
 const uuid = require('uuid');
 
 const { getClient, getDB, createObjectId } = require('./db');
+const { jsonParser, requestLog } = require('./Middleware/middleware')
 const getCurrentDate = require('./utility/date');
 
 app.use((req, res, next) => {
-  let body = "";
-  if (req.is("json")) {
-    req.on("data", (chunk) => {
-      body += chunk;
-    })
-
-    req.on("end", () => {
-      try {
-        req.body = JSON.parse(body);
-
-        next();
-
-      } catch (e) {
-        res.status(404).end();
-      }
-    })
-  } else {
-    next();
-  }
+  jsonParser(req, res, next);
 })
 
 app.use((req, res, next) => {
-  let start = Date.now();
-  res.once('finish', () => {
-    let end = Date.now();
-    let timeTook = end - start;
-    console.log(req.method, req.path, res.statusCode, timeTook + 'ms');
-  });
-  next();
+  requestLog(req, res, next);
 });
 
 app.get('/trello', (req, res) =>{
@@ -163,7 +140,7 @@ app.delete('/trello/item/:id', (req, res) =>{
     })
 })
 
-app.patch('/trello/item/:id', (req, res) =>{
+app.patch('/trello/item/:id/edit', (req, res) =>{
   let id = req.params.id;
   let body = req.body;
 
@@ -191,6 +168,36 @@ app.patch('/trello/item/:id', (req, res) =>{
       res.status(500).end();
     })
 })
+
+app.patch('/trello/item/:id/description', (req, res) =>{
+  let id = req.params.id;
+  let body = req.body;
+
+  if(!id){
+    res.status(400).end();
+    return;
+  }
+
+  getDB().collection('myCollection')
+    .updateOne({
+      _id: createObjectId(id),
+      items: {
+        $elemMatch: {id: body.id}
+      }
+    },{
+      $set:{
+        'items.$.description': body.value
+     }
+    })
+    .then((result) =>{
+      res.status(200).send({result: true})
+    })
+    .catch((e) =>{
+      console.error(e);
+      res.status(500).end();
+    })
+})
+
 
 
 
