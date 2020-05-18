@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import './App.css';
+import styled from 'styled-components';
 import axios from 'axios';
 
 import List from './components/List'
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
 
 function App() {
   const [value, setValue] = useState('');
@@ -42,7 +48,7 @@ function App() {
   }
 
   return (
-    <div className="App">
+    <Container className="App">
       <form onSubmit={handleSumbitList}>
         <input 
           placeholder='List name..' 
@@ -52,7 +58,7 @@ function App() {
         <button type='submit'>Add List</button>
       </form>
       <List list={list} update={update}/>
-    </div>
+    </Container>
   );
 }
 

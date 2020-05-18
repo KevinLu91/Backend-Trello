@@ -29,7 +29,7 @@ app.get('/trello', (req, res) =>{
     });
 })
 
-app.get('/trello/list/:id/item', (req, res) =>{
+app.get('/trello/list/:id', (req, res) =>{
   let id = req.params.id;
 
   if(!id){
@@ -40,7 +40,42 @@ app.get('/trello/list/:id/item', (req, res) =>{
   getDB().collection('myCollection')
     .findOne({_id: createObjectId(id)})
     .then((result) =>{
+      console.log(result)
       res.status(200).send(result)
+    })
+    .catch((e) =>{
+      console.error(e)
+      res.status(500).end();
+    })
+})
+
+app.get('/trello/list/:listId/item/:itemId', (req, res) =>{
+  let listId = req.params.listId;
+  let itemId = req.params.itemId;
+
+  if(!listId || !itemId){
+    res.status(400).end();
+    return;
+  }
+  let currentItem;
+
+  getDB().collection('myCollection')
+    .findOne({_id: createObjectId(listId)})
+
+    .then((result) =>{
+      for(const item of result.items){
+        for(const property in item){
+          if(item[property] === itemId){
+            currentItem = item;
+            res.status(200).send(currentItem)
+          } 
+        }
+      }
+
+      if(!currentItem){
+        res.status(404).end();
+            return;
+      }
     })
     .catch((e) =>{
       console.error(e)
@@ -98,6 +133,37 @@ app.post('/trello/list/:id/item', (req, res) =>{
     })
 })
 
+app.post('/trello/list/:id', (req, res) =>{
+  let id = req.params.id;
+  let body = req.body; 
+
+  if(!id || !body.name){
+    res.status(400).end();
+    return;
+  }
+  
+  getDB().collection('myCollection')
+    .findOne({_id: createObjectId(id)})
+    .then((result) =>{
+      let name = body.name;
+      let items = result.items;
+
+      for(let i = 0; i<items.length; i++){
+        items[i].id = uuid.v4();
+      }
+      
+      return getDB().collection('myCollection')
+        .insertOne({name, items})
+        .then((result) =>{
+          res.status(201).send();
+        })
+    })
+    .catch((e) =>{
+      console.error(e)
+      res.status(500).end();
+    })
+})
+
 app.delete('/trello/list/:id', (req, res) =>{
   let id = req.params.id;
 
@@ -140,20 +206,21 @@ app.delete('/trello/item/:id', (req, res) =>{
     })
 })
 
-app.patch('/trello/item/:id/edit', (req, res) =>{
-  let id = req.params.id;
+app.patch('/trello/list/:listId/item/:itemId/edit', (req, res) =>{
+  let listId = req.params.listId;
+  let itemId = req.params.itemId;
   let body = req.body;
 
-  if(!id || !body.id || !body.value){
+  if(!listId || !itemId || !body.value){
     res.status(400).end();
     return;
   }
 
   getDB().collection('myCollection')
     .updateOne({
-      _id: createObjectId(id),
+      _id: createObjectId(listId),
       items: {
-        $elemMatch: {id: body.id}
+        $elemMatch: {id: itemId}
       }
     },{
       $set:{
@@ -169,20 +236,21 @@ app.patch('/trello/item/:id/edit', (req, res) =>{
     })
 })
 
-app.patch('/trello/item/:id/description', (req, res) =>{
-  let id = req.params.id;
+app.patch('/trello/list/:listId/item/:itemId/description', (req, res) =>{
+  let listId = req.params.listId;
+  let itemId = req.params.itemId;
   let body = req.body;
 
-  if(!id){
+  if(!listId || !itemId || !body.value){
     res.status(400).end();
     return;
   }
 
   getDB().collection('myCollection')
     .updateOne({
-      _id: createObjectId(id),
+      _id: createObjectId(listId),
       items: {
-        $elemMatch: {id: body.id}
+        $elemMatch: {id: itemId}
       }
     },{
       $set:{
@@ -198,8 +266,47 @@ app.patch('/trello/item/:id/description', (req, res) =>{
     })
 })
 
+app.patch('/trello/list/:listId/item/:itemId/move', (req, res) =>{
+  let listId = req.params.listId;
+  let itemId = req.params.itemId;
+  let body = req.body; 
 
+  console.log(body.item)
+  
+  if(!listId || !itemId || !body.item || !body.moveId
+    || !body.item.title || !body.item.date || !body.item.id){
+    res.status(400).end();
+    return;
+  }
 
+  if(body.item.description !== '' && !body.item.description){
+    res.status(400).end();
+    return;
+  }
+  
+  getDB().collection('myCollection')
+    .updateOne({_id: createObjectId(listId)},
+      {$pull: {items: {id: itemId}}}
+    )
+    .then(() =>{
+      return getDB().collection('myCollection')
+       .updateOne({_id: createObjectId(body.moveId)}, 
+         {
+          $push: {
+            items: {
+               $each: [body.item],
+             }
+          }
+      })
+      .then((result) =>{
+        res.status(204).end()
+      })    
+    })
+    .catch((e) =>{
+      console.log(e)
+      res.status(500).end()
+    })
+})
 
 app.listen(port, () =>{
   console.log(`Started server on ${port}`)

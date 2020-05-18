@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
 import CreateIcon from '@material-ui/icons/Create';
 
 import ModalItem from './Modals/ModalItem';
+import ListDropdown from './ListDropdown';
+import ListAddItem from './ListAddItem';
 
 const Container = styled.div`
   display: flex;
@@ -15,66 +17,50 @@ const Container = styled.div`
     justify-content: space-between;
     margin: 15px;
     min-height: 300px;
-    background: lightgrey;
+    background: rgb(235,236,240);
   }
 
   .list_header{
     display: flex;
+    justify-content: space-between;
+    margin-left: 15px;
+  }
+
+  .list_main{
+    margin-left: 15px;
+
+    .item_container{
+      background: white;
+      padding: 5px;
+      margin-bottom: 10px;
+      margin-right: 15px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .item_btn{
+      border: none;
+      background: white;
+      cursor: pointer;
+
+      :hover{
+        background: rgba(9,30,66,.25);
+      }
+    }
   }
 
   .list_footer{
-    
-   
 
   }
+
 `
 
 function List(props){
-  const [value, setvalue] = useState('');
   const [itemModal, setItemModal] = useState(false);
   const [listId, setListId] = useState('');
   const [itemId, setItemId] = useState('');
   const [itemName, setItemName] = useState('');
-
-  function handleDeleteList(e) {
-    axios.delete(`/trello/list/${e.target.dataset.id}`)
-      .then((result) =>{
-        props.update()
-      })
-      .catch((e) =>{
-       console.log(e);
-      })
-  }
-
-  function handleList(e){
-    axios.get(`/trello/list/${e.target.dataset.id}/item`)
-      .then((result) =>{
-        console.log(result)
-        props.update()
-      })
-      .catch((e) =>{
-        console.log(e)
-      })
-  }
-
-  function handleItemOnchange(e){
-    setvalue(e.target.value)
-  }
-
-  function handleAddItem(e){
-    e.preventDefault(e)
-    axios.post(`/trello/list/${e.target.dataset.id}/item`, {
-      title: value, 
-      description: '',
-    })
-      .then((result) =>{
-        props.update()
-        setvalue('')
-      })
-      .catch((e) =>{
-        console.log(e)
-      })
-  }
 
   function handleItemModul(e){
     setItemModal(!itemModal);
@@ -85,23 +71,26 @@ function List(props){
       setItemName(e.target.dataset.user)
     }
   }
-  
 
   return(
     <Container>
       {props.list.length === 0 ? <p>No list, Please create a list</p> : null}
-      {props.list ? props.list.map(x =>(
+      {props.list ? props.list.map( x =>(
         <div className='list_container' key={x._id}>
-          <div className='list_header'>
+          <div className='list_header' >
             <h3>{x.name}</h3>
-            <button data-id={x._id} onClick={handleDeleteList}>Delete</button>
-            <button data-id={x._id} onClick={handleList}>info</button>
-          </div>
+            <ListDropdown 
+              name={x.name}
+              id = {x._id}
+              update = {props.update}
+            />
+          </div>   
           <div className='list_main'>
               {x.items.map(y =>(
-                <div key={y.id}>
+                <div key={y.id} className='item_container'>
                   {y.title}
                   <button 
+                     className='item_btn'
                      onClick={handleItemModul}
                      data-id={x._id}
                      id={y.id}
@@ -122,20 +111,16 @@ function List(props){
                     itemId={itemId}
                     itemName={itemName}
                     update={props.update}
+                    list={props.list}
                   /> : null}       
                 </div>
               ))}
           </div>
           <div className='list_footer'>
-            <form>
-              <input 
-                type='text' 
-                onChange={handleItemOnchange}
-                value={value}
-                placeholder= 'Add item..'
-              />
-              <button data-id={x._id} onClick={handleAddItem} type='submit'>Add item</button>
-            </form>
+            <ListAddItem 
+              id = {x._id}
+              update = {props.update}
+            />
           </div>
         </div>
       )) : <p>Loading...</p>}
