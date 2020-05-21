@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
+import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
+import CheckIcon from '@material-ui/icons/Check';
 
 import useOutsideClick from "../utility/useOutsideClick";
 
@@ -9,11 +11,9 @@ const Container = styled.div`
   display: inline-block;
 
   .dropdown_btn {
-    background-color: #008CBA;
-    color: white;
-    padding: 16px;
-    font-size: 16px;
+    
     border: none;
+    cursor: pointer;
   }
 
   .dropdown_content{ 
@@ -69,12 +69,25 @@ const Container = styled.div`
     }
   }
 
+  .sort_container{
+    display: flex;
+    align-items: center;
+    
+    p{
+      width: 100%;
+    }
+  }
+
 `
 
 function ListDropdown(props){
   const [value, setValue] = useState('');
   const [dropdown, setDropdown] = useState( false);
+  const [moveValue, setMoveValue] = useState(null);
+
   const ref = useRef();
+
+
 
   useOutsideClick(ref, () =>{
     if(dropdown){
@@ -82,11 +95,10 @@ function ListDropdown(props){
     }
   })
 
-  function handleList(e){
+  function handleListInfo(e){
     axios.get(`/trello/list/${e.target.dataset.id}`)
       .then((result) =>{
         console.log(result)
-        props.update()
       })
       .catch((e) =>{
         console.log(e)
@@ -105,14 +117,14 @@ function ListDropdown(props){
   
   function handleCopy(e){
     axios.post(`/trello/list/${e.target.dataset.id}`, {name: value})
-    .then((result) =>{
-      setValue('');
-      props.update();
-      handeMenu();
-    })
-    .catch((e) =>{
-      console.log(e)
-    })
+      .then((result) =>{
+        setValue('');
+        props.update();
+        handeMenu();
+      })
+      .catch((e) =>{
+        console.log(e)
+      })
   }
 
   function handleListOnChange(e){
@@ -121,20 +133,61 @@ function ListDropdown(props){
 
   function handeMenu() {
     setDropdown(!dropdown)
-   
+  }
+
+  function handleMoveOnchange(e){
+    setMoveValue(e.target.value)
+    console.log(moveValue-1)
+  }
+
+  function handleMove(){
+    let oldIndex;
+
+    for(let i = 0; i < props.list.length; i++){      
+      if(props.list[i]._id === props.id){
+        oldIndex = (i);
+        
+      }
+    }
+
+    console.log('new', moveValue)
+    console.log('old', oldIndex)
+    
+    
+    axios.patch(`/trello/list/${props.id}/move`, {new_index: moveValue-1, old_index: oldIndex})
+      .then((result) =>{
+        props.update();
+        handeMenu();
+        console.log(result);
+      })
+      .catch((e) =>{
+        console.log(e)
+      })
+      
   }
   
   return(
     <Container>
-        <button className='dropdown_btn' onClick={handeMenu}>  ... </button>
+        <button className='dropdown_btn' onClick={handeMenu}>  <MoreHorizIcon /> </button>
         {dropdown ? <div className='dropdown_content' ref={ref} >
           <div className='dropdown_header'>
             <p>List Actions</p>
             <span onClick={handeMenu}>&times;</span>
           </div>
           <div className='droppdown_main'>
-            <p data-id={props.id} onClick={handleList} >info</p>
+            <p data-id={props.id} onClick={handleListInfo} >info</p>
+            <div className='sort_container'><p onClick={props.handleSortByName}>Sort lists by name</p>{props.sort ? <CheckIcon /> : null}</div>   
             <p data-id={props.id} onClick={handleDeleteList} >Delete list</p>
+            
+            <p onClick={handleMove}>Move</p>
+            <select onChange={handleMoveOnchange}>
+              <option>--Please choose a move option--</option>
+              {props.list.map( (x,i) =>(
+                <option key={x._id}>
+                  {i+1}
+                </option>
+              ))}
+            </select>
             <div className='copy_container'>
               <p data-id={props.id} onClick={handleCopy}>Copy:</p>
               <input type='text' placeholder='New list name.. ' id={props.id} value={value} onChange={handleListOnChange}/>

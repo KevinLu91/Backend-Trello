@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const port = process.env.process || 8090;
-const uuid = require('uuid');
+const uuid = require('uuid'); 
 
 const { getClient, getDB, createObjectId } = require('./db');
 const { jsonParser, requestLog } = require('./Middleware/middleware')
@@ -21,12 +21,26 @@ app.get('/trello', (req, res) =>{
     .find({})
     .toArray()
     .then(data => {
-      res.send(data);
+      res.status(200).send(data);
     })
     .catch(e => {
       console.error(e);
       res.status(500).end();
     });
+})
+
+app.get('/trello/sort', (req, res) =>{
+  getDB().collection('myCollection')
+    .find()
+    .sort({name: 1})
+    .toArray()
+    .then(data =>{
+      res.status(200).send(data);
+    })
+    .catch((e) =>{
+      console.error(e);
+      res.status(500).end()
+    })
 })
 
 app.get('/trello/list/:id', (req, res) =>{
@@ -61,7 +75,6 @@ app.get('/trello/list/:listId/item/:itemId', (req, res) =>{
 
   getDB().collection('myCollection')
     .findOne({_id: createObjectId(listId)})
-
     .then((result) =>{
       for(const item of result.items){
         for(const property in item){
@@ -184,18 +197,18 @@ app.delete('/trello/list/:id', (req, res) =>{
 })
 
 
-app.delete('/trello/item/:id', (req, res) =>{
-  let id = req.params.id;
-  let body = req.body 
+app.delete('/trello/list/:listId/item/:itemId', (req, res) =>{
+  let listId = req.params.listId;
+  let itemId = req.params.itemId; 
   
-  if(!id || !body.id){
+  if(!listId || !itemId){
     res.status(400).end();
     return;
   }
  
   getDB().collection('myCollection')
-    .updateOne({_id: createObjectId(id)},
-      {$pull: {items: {id: body.id}}}
+    .updateOne({_id: createObjectId(listId)},
+      {$pull: {items: {id: itemId}}}
     )
     .then(() =>{
       res.status(204).end()
@@ -270,8 +283,6 @@ app.patch('/trello/list/:listId/item/:itemId/move', (req, res) =>{
   let listId = req.params.listId;
   let itemId = req.params.itemId;
   let body = req.body; 
-
-  console.log(body.item)
   
   if(!listId || !itemId || !body.item || !body.moveId
     || !body.item.title || !body.item.date || !body.item.id){
@@ -303,10 +314,44 @@ app.patch('/trello/list/:listId/item/:itemId/move', (req, res) =>{
       })    
     })
     .catch((e) =>{
-      console.log(e)
+      console.error(e)
       res.status(500).end()
     })
 })
+
+app.patch('/trello/list/:id/move', (req, res) =>{
+  let body = req.body;
+  let id = req.params.id;
+  let newArray;
+
+
+  getDB().collection('myCollection')
+    .find({})
+    .toArray()
+    .then((result) =>{
+
+    result.splice(body.new_index, 0, result.splice(body.old_index, 1)[0])
+    newArray = result;   
+    console.log('test', newArray) 
+    return getDB().collection('myCollection')
+      .deleteMany({})
+      .then(() =>{
+        return getDB().collection('myCollection')
+          .insertMany(newArray)
+          .then((result) =>{
+            res.send(result)
+          })
+      })
+      
+    })
+    .catch((e) =>{
+      console.error(e);
+      res.status(500).end();
+    })
+
+  
+})
+
 
 app.listen(port, () =>{
   console.log(`Started server on ${port}`)

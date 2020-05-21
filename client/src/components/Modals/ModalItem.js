@@ -66,7 +66,12 @@ const Container = styled.div`
 
   .modal_footer{
     display:flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: end;
+
+    p{
+      font-size: 12px;
+    }
   }
 
   .move_container{
@@ -76,7 +81,7 @@ const Container = styled.div`
   }
 
   button{
-    background-color: #008CBA;
+    background-color: rgb(77,180,198);
     border: none;
     cursor: pointer;
     color: white;
@@ -106,7 +111,7 @@ function ModalItem(props){
       .catch((e) =>{
         console.log(e)
       })
-  }, [])
+  }, [props.listId, props.itemId])
 
   
 
@@ -115,9 +120,7 @@ function ModalItem(props){
   }
 
   function handleDeleteItem(e){
-    console.log(e.target.dataset.id)
-    console.log(e.target.id)
-    axios.delete(`/trello/item/${e.target.dataset.id}`, { data: { id: e.target.id }})
+    axios.delete(`/trello/list/${e.target.dataset.id}/item/${e.target.id}`)
       .then((result) =>{
         props.update()
         props.handleItemModul()
@@ -141,7 +144,7 @@ function ModalItem(props){
   function handleDescription(e){
     axios.patch(`/trello/list/${e.target.dataset.id}/item/${e.target.id}/description`, {value: descriptionValue})
       .then((result) =>{
-        console.log(result)
+        props.update()
         props.handleItemModul()
       })
       .catch((e) =>{
@@ -205,6 +208,7 @@ function ModalItem(props){
           </div>
         </div>
         <div className='modal_footer'>
+          <p>Item created: {props.itemDate}</p>
           <button data-id={props.listId} id={props.itemId} onClick={handleDeleteItem}>Delete</button>
         </div>
         

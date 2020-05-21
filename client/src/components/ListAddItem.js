@@ -5,17 +5,17 @@ import styled from 'styled-components';
 const Container = styled.form`
 
   input{
-    height: 30px;
+    height: 31px;
   }
 
   button{
-    background-color: #008CBA;
+    background-color: rgb(77,180,198);
     color: white;
     border: none;
     cursor: pointer;
     padding-bottom: 25px;
-    padding-top: 10px;
-    height: 30px;
+    padding-top: 12px;
+    height: 33px;
     width: 75px;
     text-align: center;
     text-decoration: none;
