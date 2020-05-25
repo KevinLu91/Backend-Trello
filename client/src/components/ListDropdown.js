@@ -122,7 +122,7 @@ function ListDropdown(props){
   }
   
   function handleCopy(e){
-    axios.post(`/trello/list/${e.target.dataset.id}`, {name: value})
+    axios.post(`/trello/list/${e.target.dataset.id}/copy`, {name: value})
       .then((result) =>{
         setValue('');
         props.update();

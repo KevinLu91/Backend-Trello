@@ -23,7 +23,8 @@ function requestLog(req, res, next){
   res.once('finish', () => {
     let end = Date.now();
     let timeTook = end - start;
-    console.log(req.method, req.path, res.statusCode, timeTook + 'ms');
+    let log= `Method: ${req.method}, Path: ${req.path}, Status: ${res.statusCode}, Response time: ${timeTook} ms`
+    console.log(log)
   });
   next();
 }

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import axios from 'axios';
 
 import List from './components/List'
+import ModalDeleteLists from './components/Modals/ModalDeleteLists';
 
 const Container = styled.div`
   display: flex;
@@ -10,6 +11,27 @@ const Container = styled.div`
   align-items: center;
   background: rgb(0,174,204);
   min-height: 100vh;
+
+  .list_header{
+    display: flex;
+    align-items: baseline;
+
+    .deleteList_btn{
+      background-color: rgb(4,122,143);
+      color: white;
+      border: none;
+      cursor: pointer;
+      padding-bottom: 25px;
+      padding-top: 11px;
+      height: 33px;
+      width: 75px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+  }
 
   .list_input{
     height:30px;
@@ -37,13 +59,13 @@ function App() {
   const [list, setList] = useState('');
   const [useUpdate, setUseUpdate] = useState(0);
   const [sort, setSort] = useState(false);
+  const [modalDeleteAll, setModalDeleteAll] = useState(false)
   
   useEffect(() =>{
 
     if(sort){
       axios.get('/trello/sort')
       .then((data) =>{
-        console.log(data.data)
         setList(data.data)
       })
       .catch((e) =>{
@@ -51,7 +73,7 @@ function App() {
       })
     } else {
       axios.get('/trello')
-      .then((data) =>{
+      .then((data) =>{  
         setList(data.data)
       })
       .catch((e) =>{
@@ -86,17 +108,25 @@ function App() {
       })
   }
 
+  function handleDeleteAll(){
+    setModalDeleteAll(!modalDeleteAll)
+  }
+
   return (
     <Container className="App">
-      <form onSubmit={handleSumbitList}>
-        <input 
-          placeholder='List name..' 
-          onChange={handleOnchangeList}
-          value={value}
-          className='list_input'
-        />
-        <button className='addList_btn'type='submit'>Add List</button>
-      </form>
+      <div className='list_header'>
+        <form onSubmit={handleSumbitList}>
+          <input 
+            placeholder='List name..' 
+            onChange={handleOnchangeList}
+            value={value}
+            className='list_input'
+          />
+          <button className='addList_btn'type='submit'>Add List</button>
+        </form>
+        <button className='deleteList_btn' onClick={handleDeleteAll}>Delete all </button>
+      </div>
+      {modalDeleteAll ? <ModalDeleteLists handleDeleteAll={handleDeleteAll} update={update}/> : null}
       <List 
         list={list} 
         update={update} 

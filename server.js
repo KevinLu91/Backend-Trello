@@ -21,7 +21,7 @@ app.get('/trello', (req, res) =>{
     .find({})
     .toArray()
     .then(data => {
-      res.status(200).send(data);
+      res.status(200).json(data);
     })
     .catch(e => {
       console.error(e);
@@ -35,7 +35,7 @@ app.get('/trello/sort', (req, res) =>{
     .sort({name: 1})
     .toArray()
     .then(data =>{
-      res.status(200).send(data);
+      res.status(200).json(data);
     })
     .catch((e) =>{
       console.error(e);
@@ -54,8 +54,7 @@ app.get('/trello/list/:id', (req, res) =>{
   getDB().collection('myCollection')
     .findOne({_id: createObjectId(id)})
     .then((result) =>{
-      console.log(result)
-      res.status(200).send(result)
+      res.status(200).json(result)
     })
     .catch((e) =>{
       console.error(e)
@@ -80,7 +79,7 @@ app.get('/trello/list/:listId/item/:itemId', (req, res) =>{
         for(const property in item){
           if(item[property] === itemId){
             currentItem = item;
-            res.status(200).send(currentItem)
+            res.status(200).json(currentItem)
           } 
         }
       }
@@ -107,7 +106,7 @@ app.post('/trello/list', (req, res) =>{
   getDB().collection('myCollection')
     .insertOne(body)
     .then((result) =>{
-      res.status(201).send(body);
+      res.status(201).json(body);
     })
     .catch((e) =>{
       console.error(e);
@@ -138,7 +137,7 @@ app.post('/trello/list/:id/item', (req, res) =>{
         }
     })
     .then((result) =>{
-      res.status(201).send(body)
+      res.status(201).json(body)
     })
     .catch((e) =>{
       console.error(e)
@@ -146,7 +145,7 @@ app.post('/trello/list/:id/item', (req, res) =>{
     })
 })
 
-app.post('/trello/list/:id', (req, res) =>{
+app.post('/trello/list/:id/copy', (req, res) =>{
   let id = req.params.id;
   let body = req.body; 
 
@@ -168,11 +167,24 @@ app.post('/trello/list/:id', (req, res) =>{
       return getDB().collection('myCollection')
         .insertOne({name, items})
         .then((result) =>{
-          res.status(201).send();
+          res.status(201).json(result);
         })
     })
     .catch((e) =>{
       console.error(e)
+      res.status(500).end();
+    })
+})
+
+app.delete('/trello/lists', (req, res) =>{
+
+  getDB().collection('myCollection')
+    .deleteMany({})
+    .then((result) =>{
+      res.status(204).end();
+    })
+    .catch((e) =>{
+      console.error(e);
       res.status(500).end();
     })
 })
@@ -241,7 +253,7 @@ app.patch('/trello/list/:listId/item/:itemId/edit', (req, res) =>{
      }
     })
     .then((result) =>{
-      res.status(200).send({result: true})
+      res.status(200).json({result: true})
     })
     .catch((e) =>{
       console.error(e);
@@ -254,12 +266,13 @@ app.patch('/trello/list/:listId/item/:itemId/description', (req, res) =>{
   let itemId = req.params.itemId;
   let body = req.body;
 
-  if(!listId || !itemId || !body.value){
+  if(!listId || !itemId){
     res.status(400).end();
     return;
   }
 
-  getDB().collection('myCollection')
+  if(body.value === '' || body.value){
+    getDB().collection('myCollection')
     .updateOne({
       _id: createObjectId(listId),
       items: {
@@ -271,12 +284,16 @@ app.patch('/trello/list/:listId/item/:itemId/description', (req, res) =>{
      }
     })
     .then((result) =>{
-      res.status(200).send({result: true})
+      res.status(200).json({result: true})
     })
     .catch((e) =>{
       console.error(e);
       res.status(500).end();
     })
+  } else{
+    res.status(400).end();
+    return;
+  }
 })
 
 app.patch('/trello/list/:listId/item/:itemId/move', (req, res) =>{
@@ -341,7 +358,7 @@ app.patch('/trello/list/move', (req, res) =>{
           return getDB().collection('myCollection')
             .insertMany(newArray)
             .then((result) =>{
-              res.status(201).send(result)
+              res.status(201).json(result)
             })
         })     
       })

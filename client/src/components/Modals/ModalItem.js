@@ -106,7 +106,6 @@ function ModalItem(props){
     axios.get(`/trello/list/${props.listId}/item/${props.itemId}`)
       .then((result) =>{
         setItem(result.data)
-        console.log(result.data)
       })
       .catch((e) =>{
         console.log(e)
@@ -155,7 +154,6 @@ function ModalItem(props){
   function handleMove(e){
     axios.patch(`/trello/list/${props.listId}/item/${props.itemId}/move`, {item, moveId: moveId})
       .then((result) =>{
-        console.log(result)
         props.update()
         props.handleItemModul()
       })
@@ -177,7 +175,6 @@ function ModalItem(props){
     let optionElement = e.target.childNodes[index]
     let optionId =  optionElement.getAttribute('data-id');
     setMoveId(optionId)
-    console.log("titta", optionId)
   }
 
   return(
