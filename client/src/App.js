@@ -52,7 +52,6 @@ function App() {
     } else {
       axios.get('/trello')
       .then((data) =>{
-        console.log(data.data)
         setList(data.data)
       })
       .catch((e) =>{

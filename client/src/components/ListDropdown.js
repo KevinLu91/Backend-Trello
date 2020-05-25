@@ -60,6 +60,14 @@ const Container = styled.div`
     }
   }
 
+  .move_container{
+    border-top: 1px solid rgb(149,158,174);
+
+    select{
+      margin-bottom: 10px;
+    }
+  }
+
   .copy_container{
     border-top: 1px solid rgb(149,158,174);
     
@@ -86,8 +94,6 @@ function ListDropdown(props){
   const [moveValue, setMoveValue] = useState(null);
 
   const ref = useRef();
-
-
 
   useOutsideClick(ref, () =>{
     if(dropdown){
@@ -137,7 +143,6 @@ function ListDropdown(props){
 
   function handleMoveOnchange(e){
     setMoveValue(e.target.value)
-    console.log(moveValue-1)
   }
 
   function handleMove(){
@@ -149,21 +154,15 @@ function ListDropdown(props){
         
       }
     }
-
-    console.log('new', moveValue)
-    console.log('old', oldIndex)
     
-    
-    axios.patch(`/trello/list/${props.id}/move`, {new_index: moveValue-1, old_index: oldIndex})
+    axios.patch(`/trello/list/move`, {new_index: moveValue-1, old_index: oldIndex})
       .then((result) =>{
         props.update();
         handeMenu();
-        console.log(result);
       })
       .catch((e) =>{
         console.log(e)
-      })
-      
+      })    
   }
   
   return(
@@ -178,16 +177,17 @@ function ListDropdown(props){
             <p data-id={props.id} onClick={handleListInfo} >info</p>
             <div className='sort_container'><p onClick={props.handleSortByName}>Sort lists by name</p>{props.sort ? <CheckIcon /> : null}</div>   
             <p data-id={props.id} onClick={handleDeleteList} >Delete list</p>
-            
-            <p onClick={handleMove}>Move</p>
-            <select onChange={handleMoveOnchange}>
-              <option>--Please choose a move option--</option>
-              {props.list.map( (x,i) =>(
-                <option key={x._id}>
-                  {i+1}
-                </option>
-              ))}
-            </select>
+            <div className='move_container'>
+              <p onClick={handleMove}>Move</p>
+              <select onChange={handleMoveOnchange}>
+                <option>--Please choose a move option--</option>
+                {props.list.map( (x,i) =>(
+                  <option key={x._id}>
+                    {i+1}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className='copy_container'>
               <p data-id={props.id} onClick={handleCopy}>Copy:</p>
               <input type='text' placeholder='New list name.. ' id={props.id} value={value} onChange={handleListOnChange}/>

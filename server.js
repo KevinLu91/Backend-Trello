@@ -319,39 +319,41 @@ app.patch('/trello/list/:listId/item/:itemId/move', (req, res) =>{
     })
 })
 
-app.patch('/trello/list/:id/move', (req, res) =>{
+app.patch('/trello/list/move', (req, res) =>{
   let body = req.body;
-  let id = req.params.id;
   let newArray;
 
+  console.log(body.new_index)
+  console.log(body.old_index)
 
-  getDB().collection('myCollection')
-    .find({})
-    .toArray()
-    .then((result) =>{
+  if(body.new_index || body.new_index === 0 || 
+    body.old_index || body.old_index === 0){
+      getDB().collection('myCollection')
+      .find({})
+      .toArray()
+      .then((result) =>{
 
-    result.splice(body.new_index, 0, result.splice(body.old_index, 1)[0])
-    newArray = result;   
-    console.log('test', newArray) 
-    return getDB().collection('myCollection')
-      .deleteMany({})
-      .then(() =>{
-        return getDB().collection('myCollection')
-          .insertMany(newArray)
-          .then((result) =>{
-            res.send(result)
-          })
+      result.splice(body.new_index, 0, result.splice(body.old_index, 1)[0])
+      newArray = result;   
+      return getDB().collection('myCollection')
+        .deleteMany({})
+        .then(() =>{
+          return getDB().collection('myCollection')
+            .insertMany(newArray)
+            .then((result) =>{
+              res.status(201).send(result)
+            })
+        })     
       })
-      
-    })
-    .catch((e) =>{
-      console.error(e);
-      res.status(500).end();
-    })
-
-  
+      .catch((e) =>{
+        console.error(e);
+        res.status(500).end();
+      })
+  } else{
+    res.status(400).end();
+    return;
+  }
 })
-
 
 app.listen(port, () =>{
   console.log(`Started server on ${port}`)

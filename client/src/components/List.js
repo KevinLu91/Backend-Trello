@@ -68,10 +68,6 @@ const Container = styled.div`
     }
   }
 
-  .list_footer{
-
-  }
-
 `
 
 function List(props){
