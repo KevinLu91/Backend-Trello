@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
 import MoreHorizIcon from '@material-ui/icons/MoreHoriz';

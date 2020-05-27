@@ -7,6 +7,8 @@ const { getClient, getDB, createObjectId } = require('./db');
 const { jsonParser, requestLog } = require('./Middleware/middleware')
 const getCurrentDate = require('./utility/date');
 
+const trelloRouter = express.Router();
+
 app.use((req, res, next) => {
   jsonParser(req, res, next);
 })
@@ -15,7 +17,8 @@ app.use((req, res, next) => {
   requestLog(req, res, next);
 });
 
-app.get('/trello', (req, res) =>{
+
+trelloRouter.get('/', (req, res) =>{
   const db = getDB();
   db.collection('myCollection')
     .find({})
@@ -29,7 +32,7 @@ app.get('/trello', (req, res) =>{
     });
 })
 
-app.get('/trello/sort', (req, res) =>{
+trelloRouter.get('/sort', (req, res) =>{
   getDB().collection('myCollection')
     .find()
     .sort({name: 1})
@@ -43,7 +46,7 @@ app.get('/trello/sort', (req, res) =>{
     })
 })
 
-app.get('/trello/list/:id', (req, res) =>{
+trelloRouter.get('/list/:id', (req, res) =>{
   let id = req.params.id;
 
   if(!id){
@@ -62,7 +65,7 @@ app.get('/trello/list/:id', (req, res) =>{
     })
 })
 
-app.get('/trello/list/:listId/item/:itemId', (req, res) =>{
+trelloRouter.get('/list/:listId/item/:itemId', (req, res) =>{
   let listId = req.params.listId;
   let itemId = req.params.itemId;
 
@@ -95,7 +98,7 @@ app.get('/trello/list/:listId/item/:itemId', (req, res) =>{
     })
 })
 
-app.post('/trello/list', (req, res) =>{
+trelloRouter.post('/list', (req, res) =>{
   let body = req.body; 
 
   if(!body.items || !body.name){
@@ -114,7 +117,7 @@ app.post('/trello/list', (req, res) =>{
     })
 })
 
-app.post('/trello/list/:id/item', (req, res) =>{
+trelloRouter.post('/list/:id/item', (req, res) =>{
   let body = req.body;
   let id = req.params.id;
   let user;
@@ -145,7 +148,7 @@ app.post('/trello/list/:id/item', (req, res) =>{
     })
 })
 
-app.post('/trello/list/:id/copy', (req, res) =>{
+trelloRouter.post('/list/:id/copy', (req, res) =>{
   let id = req.params.id;
   let body = req.body; 
 
@@ -176,7 +179,7 @@ app.post('/trello/list/:id/copy', (req, res) =>{
     })
 })
 
-app.delete('/trello/lists', (req, res) =>{
+trelloRouter.delete('/lists', (req, res) =>{
 
   getDB().collection('myCollection')
     .deleteMany({})
@@ -189,7 +192,7 @@ app.delete('/trello/lists', (req, res) =>{
     })
 })
 
-app.delete('/trello/list/:id', (req, res) =>{
+trelloRouter.delete('/list/:id', (req, res) =>{
   let id = req.params.id;
 
   if(!id){
@@ -209,7 +212,7 @@ app.delete('/trello/list/:id', (req, res) =>{
 })
 
 
-app.delete('/trello/list/:listId/item/:itemId', (req, res) =>{
+trelloRouter.delete('/list/:listId/item/:itemId', (req, res) =>{
   let listId = req.params.listId;
   let itemId = req.params.itemId; 
   
@@ -231,7 +234,7 @@ app.delete('/trello/list/:listId/item/:itemId', (req, res) =>{
     })
 })
 
-app.patch('/trello/list/:listId/item/:itemId/edit', (req, res) =>{
+trelloRouter.patch('/list/:listId/item/:itemId/edit', (req, res) =>{
   let listId = req.params.listId;
   let itemId = req.params.itemId;
   let body = req.body;
@@ -261,7 +264,7 @@ app.patch('/trello/list/:listId/item/:itemId/edit', (req, res) =>{
     })
 })
 
-app.patch('/trello/list/:listId/item/:itemId/description', (req, res) =>{
+trelloRouter.patch('/list/:listId/item/:itemId/description', (req, res) =>{
   let listId = req.params.listId;
   let itemId = req.params.itemId;
   let body = req.body;
@@ -296,7 +299,7 @@ app.patch('/trello/list/:listId/item/:itemId/description', (req, res) =>{
   }
 })
 
-app.patch('/trello/list/:listId/item/:itemId/move', (req, res) =>{
+trelloRouter.patch('/list/:listId/item/:itemId/move', (req, res) =>{
   let listId = req.params.listId;
   let itemId = req.params.itemId;
   let body = req.body; 
@@ -336,12 +339,9 @@ app.patch('/trello/list/:listId/item/:itemId/move', (req, res) =>{
     })
 })
 
-app.patch('/trello/list/move', (req, res) =>{
+trelloRouter.patch('/list/move', (req, res) =>{
   let body = req.body;
   let newArray;
-
-  console.log(body.new_index)
-  console.log(body.old_index)
 
   if(body.new_index || body.new_index === 0 || 
     body.old_index || body.old_index === 0){
@@ -371,6 +371,8 @@ app.patch('/trello/list/move', (req, res) =>{
     return;
   }
 })
+
+app.use('/trello', trelloRouter);
 
 app.listen(port, () =>{
   console.log(`Started server on ${port}`)
