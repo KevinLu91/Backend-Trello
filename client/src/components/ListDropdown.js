@@ -150,8 +150,7 @@ function ListDropdown(props){
 
     for(let i = 0; i < props.list.length; i++){      
       if(props.list[i]._id === props.id){
-        oldIndex = (i);
-        
+        oldIndex = (i);    
       }
     }
     

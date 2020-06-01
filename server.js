@@ -330,7 +330,7 @@ trelloRouter.patch('/list/:listId/item/:itemId/move', (req, res) =>{
           }
       })
       .then((result) =>{
-        res.status(204).end()
+        res.status(200).json(result)
       })    
     })
     .catch((e) =>{
